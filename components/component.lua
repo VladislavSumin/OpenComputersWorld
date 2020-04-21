@@ -6,5 +6,6 @@ component.tank_controller = require("tank_controller")
 component.redstone = require("redstone")
 component.data = require("data")
 component.modem = require("modem")
+component.robot = require("robot")
 
 return component
