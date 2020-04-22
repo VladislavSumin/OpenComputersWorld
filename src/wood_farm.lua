@@ -9,13 +9,14 @@ local sides = require('sides')
 package.loaded.librobot = nil
 local robot = require('librobot')
 
+-- Settings
+local SAPLING_SLOT = 1
+local WOOD_SLOT = 2
+
 local function waitUntilGrow()
+    robot.select(WOOD_SLOT)
     while true do
-        --robot.move(sides.up)
-        robot.select(2)
         local result = robot.compare(sides.front)
-        robot.select(1)
-        --robot.move(sides.down)
         if result then
             return
         else
@@ -28,11 +29,11 @@ local function mainLoop()
     waitUntilGrow()
 
     -- cut down a tree
+    robot.select(SAPLING_SLOT)
     robot.swing(sides.forward)
 
     -- plantTree
     robot.exec('mf2,tr,pf,tr,mf,tl,pf,tl,pf,mb,pf')
-
 
     -- wood collecting
     while tractor_beam.suck() or robot.count(robot.inventorySize()) ~= 0 do
@@ -47,8 +48,8 @@ local function mainLoop()
         end
     end
 
+    -- going around to collect a tree that fell in far from the turtle
     robot.exec('mb2,tl,mf3,tr,mf7,tr,mf7,tr,mf7,tr,mf4,tr,mf2', 'tbs')
-
 end
 
 
