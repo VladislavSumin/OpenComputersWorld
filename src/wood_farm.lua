@@ -11,30 +11,17 @@ local robot = require('librobot')
 
 local function waitUntilGrow()
     while true do
-        robot.move(sides.up)
-        local result = robot.detect(sides.front)
-        robot.move(sides.down)
+        --robot.move(sides.up)
+        robot.select(2)
+        local result = robot.compare(sides.front)
+        robot.select(1)
+        --robot.move(sides.down)
         if result then
             return
         else
-            os.sleep(20)
+            os.sleep(10)
         end
     end
-end
-
-local function plantTree()
-    robot.move(sides.forward)
-    robot.move(sides.forward)
-    robot.turn(true)
-    robot.place(sides.forward)
-    robot.turn(true)
-    robot.move(sides.forward)
-    robot.turn(false)
-    robot.place(sides.forward)
-    robot.turn(false)
-    robot.place(sides.forward)
-    robot.move(sides.back)
-    robot.place(sides.forward)
 end
 
 local function mainLoop()
@@ -43,13 +30,15 @@ local function mainLoop()
     -- cut down a tree
     robot.swing(sides.forward)
 
-    plantTree()
+    -- plantTree
+    robot.exec('mf2,tr,pf,tr,mf,tl,pf,tl,pf,mb,pf')
+
 
     -- wood collecting
     while tractor_beam.suck() or robot.count(robot.inventorySize()) ~= 0 do
-        if (robot.count(robot.inventorySize()) ~= 0) then
+        if (robot.count(robot.inventorySize() - 3) ~= 0) then
             robot.turn(true)
-            for i = 2, robot.inventorySize() do
+            for i = 3, robot.inventorySize() do
                 robot.select(i)
                 robot.drop(sides.front)
             end
@@ -57,6 +46,9 @@ local function mainLoop()
             robot.turn(false)
         end
     end
+
+    robot.exec('mb2,tl,mf3,tr,mf7,tr,mf7,tr,mf7,tr,mf4,tr,mf2', 'tbs')
+
 end
 
 
