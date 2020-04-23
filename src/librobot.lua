@@ -129,7 +129,8 @@ local words = {
 }
 
 --- @param command string
---- @param afterEach - execute after each command
+--- @param afterEach string - execute after each command
+--- @param afterEach function - execute after each command
 local function execSingle(command, afterEach)
     --print('e: ' .. command)
     local word, count = string.match(command, '([a-z]+)([%d]*)')
@@ -137,7 +138,11 @@ local function execSingle(command, afterEach)
     for i = 1, count do
         local flag = words[word](count)
         if afterEach then
-            execSingle(afterEach)
+            if type(afterEach) == 'function' then
+                afterEach()
+            else
+                execSingle(afterEach)
+            end
         end
         if flag then
             break
@@ -147,6 +152,7 @@ end
 
 --- @param commands string
 --- @param index number
+--- @param afterEach function
 --- @param afterEach string
 local function execInternal(commands, index, afterEach)
     -- TODO переписать нормально
@@ -182,7 +188,8 @@ local function execInternal(commands, index, afterEach)
 end
 
 --- @param commands string
---- @param afterEach string
+--- @param afterEach function
+--- @param afterEach  string
 libRobot.exec = function(commands, afterEach)
     execInternal(commands, 1, afterEach)
 end
