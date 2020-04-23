@@ -128,21 +128,63 @@ local words = {
     end,
 }
 
---- @param commands string
-function libRobot.exec(commands, afterEach)
-    for command in string.gmatch(commands, '[^,]+') do
-        local word, count = string.match(command, '([a-z]+)([%d]*)')
-        count = tonumber(count) or 1
-        for i = 1, count do
-            local flag = words[word](count)
-            if afterEach then
-                libRobot.exec(afterEach)
-            end
-            if flag then
-                break
-            end
+--- @param command string
+--- @param afterEach - execute after each command
+local function execSingle(command, afterEach)
+    --print('e: ' .. command)
+    local word, count = string.match(command, '([a-z]+)([%d]*)')
+    count = tonumber(count) or 1
+    for i = 1, count do
+        local flag = words[word](count)
+        if afterEach then
+            execSingle(afterEach)
+        end
+        if flag then
+            break
         end
     end
+end
+
+--- @param commands string
+--- @param index number
+--- @param afterEach string
+local function execInternal(commands, index, afterEach)
+    -- TODO переписать нормально
+    --print("-> " .. commands:sub(index))
+    local firstIndex = index
+    while index <= commands:len() do
+        local char = commands:sub(index, index)
+        if char == '(' then
+            firstIndex = index
+            index = execInternal(commands, index + 1, afterEach)
+            local count = commands:sub(index):match('^[%d]+')
+            if count then
+                index = index + tostring(count):len()
+                for i = 1, count - 1 do
+                    execInternal(commands, firstIndex + 1, afterEach)
+                end
+            end
+            firstIndex = index
+        elseif char == ',' then
+            execSingle(commands:sub(firstIndex, index - 1), afterEach)
+            firstIndex = index + 1
+        elseif char == ')' then
+            execSingle(commands:sub(firstIndex, index - 1), afterEach)
+            return index + 1
+        end
+
+        index = index + 1
+    end
+    if (firstIndex ~= index - 1) then
+        execSingle(commands:sub(firstIndex, afterEach))
+    end
+    return index
+end
+
+--- @param commands string
+--- @param afterEach string
+libRobot.exec = function(commands, afterEach)
+    execInternal(commands, 1, afterEach)
 end
 
 return libRobot
