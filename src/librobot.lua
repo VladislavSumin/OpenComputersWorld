@@ -176,7 +176,7 @@ local function execInternal(commands, index, afterEach)
         index = index + 1
     end
     if (firstIndex ~= index - 1) then
-        execSingle(commands:sub(firstIndex, afterEach))
+        execSingle(commands:sub(firstIndex), afterEach)
     end
     return index
 end
