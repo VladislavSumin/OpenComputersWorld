@@ -65,6 +65,7 @@ end
 ---------------------------------------------------------------------------
 
 local words = {
+    -- Move
     mf = function()
         libRobot.move(sides.forward)
     end,
@@ -78,6 +79,15 @@ local words = {
         libRobot.move(sides.down)
     end,
 
+    -- Turn
+    tl = function()
+        libRobot.turn(false)
+    end,
+    tr = function()
+        libRobot.turn(true)
+    end,
+
+    -- Place
     pf = function()
         libRobot.place(sides.forward)
     end,
@@ -88,13 +98,27 @@ local words = {
         libRobot.place(sides.down)
     end,
 
-    tl = function()
-        libRobot.turn(false)
+    -- Swing
+    sf = function()
+        libRobot.swing(sides.forward)
     end,
-    tr = function()
-        libRobot.turn(true)
+    su = function()
+        libRobot.swing(sides.up)
+    end,
+    sd = function()
+        libRobot.swing(sides.down)
     end,
 
+    -- Inventory
+    is = function(slot)
+        libRobot.select(slot)
+        return true
+    end,
+    ie = function()
+        component.inventory_controller.equip()
+    end,
+
+    -- Special
     tbs = function()
         while true do
             if not component.tractor_beam.suck() then
@@ -104,18 +128,18 @@ local words = {
     end,
 }
 
---- @param command string
+--- @param commands string
 function libRobot.exec(commands, afterEach)
     for command in string.gmatch(commands, '[^,]+') do
-        local word, count, extra = string.match(command, '([a-z]+)([%d]*)+?(.*)')
+        local word, count = string.match(command, '([a-z]+)([%d]*)')
         count = tonumber(count) or 1
         for i = 1, count do
-            words[word]()
-            if extra then
-                libRobot.exec(extra)
-            end
+            local flag = words[word](count)
             if afterEach then
                 libRobot.exec(afterEach)
+            end
+            if flag then
+                break
             end
         end
     end
