@@ -187,4 +187,4 @@ libRobot.exec = function(commands, afterEach)
     execInternal(commands, 1, afterEach)
 end
 
-return libRobot
+return libRobot or robot -- this hack to syntax highlight
