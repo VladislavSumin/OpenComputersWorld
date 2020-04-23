@@ -122,7 +122,7 @@ end
 --- Suck up items from the specified side.
     --- @param side number
     --- @param count number=64
-    --- @return boolean
+    --- @return number, boolean - count sucked items, false suck 0
 function robot.suck(side, count)
 end
 
