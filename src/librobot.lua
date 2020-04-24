@@ -2,47 +2,48 @@ local component = require('component')
 local robot = component.robot
 local sides = require('sides')
 
-local libRobot = setmetatable({}, { __index = robot })
+local libRobot = setmetatable({}, { __index = robot }) or robot -- this hack to syntax highlight
 
 ---------------------------------------------------------------------------
----                         movementPolicies                            ---
+---                              policies                               ---
 ---------------------------------------------------------------------------
 
-libRobot.defaultMovementPolicies = {
-    --- Assert movement policy. Throw exception on triggered
-    --- @param direction number
-    --- @param error string
+local defaultPolicies = {
+    --- Assert policy. Throw exception on triggered
+    --- @param error any
     --- @return boolean - throw exception
-    assert = function(direction, error)
-        _G.error('robot can`t move {side: ' .. sides[direction] .. ', error: ' .. error .. '}')
+    assert = function(error, ...)
+        -- TODO add ... to assert
+        _G.error('assert policy, error: ' .. tostring(error))
     end,
 
-    --- Retry movement policy.
+    --- Retry policy.
     --- @return boolean always true
     retry = function()
         return true
     end,
 
-    --- Skip movement policy.
+    --- Skip policy.
     --- @return boolean always false
     skip = function()
         return false
     end,
 }
+libRobot.defaultPolicies = defaultPolicies
 
-libRobot.movementPolicies = setmetatable(
+local policies = setmetatable(
         {
-            entity = libRobot.defaultMovementPolicies.retry,
-            default = libRobot.defaultMovementPolicies.assert,
+            entity = defaultPolicies.retry,
+            ['already moving'] = defaultPolicies.retry,
+            ['inventory full'] = defaultPolicies.retry,
+            default = libRobot.defaultPolicies.assert,
         }, {
-            __index = function(table, index)
-                if (index == 'already moving') then
-                    return libRobot.defaultMovementPolicies.retry
-                end
+            __index = function(table, _)
                 return table.default
             end
         }
 )
+libRobot.policies = policies
 
 ---------------------------------------------------------------------------
 ---                 default robot methods overrides                     ---
@@ -50,11 +51,25 @@ libRobot.movementPolicies = setmetatable(
 
 --- Move in the specified direction. Apply librobot.movementPolicies
 --- @param direction number
---- @return boolean
+--- @return boolean,
 function libRobot.move(direction)
     while true do
         local isSuccess, error = robot.move(direction)
-        if isSuccess or not libRobot.movementPolicies[error](direction, error) then
+        if isSuccess or not policies[error](error, direction) then
+            return isSuccess, error
+        end
+    end
+end
+
+--- Drops items from the selected slot towards the specified side.
+--- @param side number
+--- @param count number=64
+--- @return boolean, string - second return error
+function libRobot.drop(side, count)
+    while true do
+        local isSuccess, error = robot.drop(side, count)
+        -- error == nil when transfer items from empty slot
+        if isSuccess or error == nil or not policies[error](error, side, count) then
             return isSuccess, error
         end
     end
@@ -128,20 +143,20 @@ local words = {
     end,
 }
 
---- @param command string
+--- @param word string
 --- @param afterEach string - execute after each command
 --- @param afterEach function - execute after each command
-local function execSingle(command, afterEach)
+local function execWord(word, afterEach)
     --print('e: ' .. command)
-    local word, count = string.match(command, '([a-z]+)([%d]*)')
+    local wordCommand, count = string.match(word, '([a-z]+)([%d]*)')
     count = tonumber(count) or 1
     for i = 1, count do
-        local flag = words[word](count)
+        local flag = words[wordCommand](count)
         if afterEach then
             if type(afterEach) == 'function' then
                 afterEach()
             else
-                execSingle(afterEach)
+                execWord(afterEach)
             end
         end
         if flag then
@@ -172,17 +187,17 @@ local function execInternal(commands, index, afterEach)
             end
             firstIndex = index
         elseif char == ',' then
-            execSingle(commands:sub(firstIndex, index - 1), afterEach)
+            execWord(commands:sub(firstIndex, index - 1), afterEach)
             firstIndex = index + 1
         elseif char == ')' then
-            execSingle(commands:sub(firstIndex, index - 1), afterEach)
+            execWord(commands:sub(firstIndex, index - 1), afterEach)
             return index + 1
         end
 
         index = index + 1
     end
     if (firstIndex ~= index - 1) then
-        execSingle(commands:sub(firstIndex), afterEach)
+        execWord(commands:sub(firstIndex), afterEach)
     end
     return index
 end
@@ -194,4 +209,4 @@ libRobot.exec = function(commands, afterEach)
     execInternal(commands, 1, afterEach)
 end
 
-return libRobot or robot -- this hack to syntax highlight
+return libRobot
