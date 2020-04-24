@@ -49,7 +49,7 @@ end
 --- Drops items from the selected slot towards the specified side.
 --- @param side number
 --- @param count number=64
---- @return boolean
+--- @return boolean, string - second return error
 function robot.drop(side, count)
 end
 
@@ -78,7 +78,7 @@ end
 
 --- Move in the specified direction.
 --- @param direction number
---- @return boolean
+--- @return boolean, string - second return error
 function robot.move(direction)
 end
 
