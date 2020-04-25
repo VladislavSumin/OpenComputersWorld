@@ -39,10 +39,7 @@ local function mainLoop()
     while tractor_beam.suck() or robot.count(robot.inventorySize()) ~= 0 do
         if (robot.count(robot.inventorySize() - 3) ~= 0) then
             robot.turn(true)
-            for i = 3, robot.inventorySize() do
-                robot.select(i)
-                robot.drop(sides.front)
-            end
+            robot.dropSlotRange(sides.forward, 3)
             robot.select(1)
             robot.turn(false)
         end

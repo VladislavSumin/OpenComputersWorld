@@ -46,10 +46,7 @@ end
 
 local function moveCoalToStorage()
     robot.exec('tr')
-    for i = 3, robot.inventorySize() do
-        robot.select(i)
-        robot.drop(sides.front)
-    end
+    robot.dropSlotRange(sides.front,3)
     robot.exec('tl')
 end
 

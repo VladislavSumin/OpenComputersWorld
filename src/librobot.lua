@@ -209,4 +209,22 @@ libRobot.exec = function(commands, afterEach)
     execInternal(commands, 1, afterEach)
 end
 
+---------------------------------------------------------------------------
+---                          Support functions                          ---
+---------------------------------------------------------------------------
+
+--- Drop all items from slot range, change selected clot
+--- @param side number
+--- @param from number
+--- @param to number=inventorySize()
+function libRobot.dropSlotRange(side, from, to)
+    to = to or libRobot.inventorySize()
+    for i = from, to do
+        libRobot.select(i)
+        while libRobot.count(i) ~= 0 do
+            libRobot.drop(side)
+        end
+    end
+end
+
 return libRobot
