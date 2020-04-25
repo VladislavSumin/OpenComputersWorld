@@ -12,6 +12,7 @@ local robot = require('librobot')
 -- Settings
 local SAPLING_SLOT = 1
 local WOOD_SLOT = 2
+local MAX_WOOD_HEIGHT = 32
 
 local function waitUntilGrow()
     robot.select(WOOD_SLOT)
@@ -25,6 +26,25 @@ local function waitUntilGrow()
     end
 end
 
+local function cleanInventory()
+    robot.turn(true)
+    robot.dropSlotRange(sides.forward, 3)
+    robot.turn(false)
+end
+
+local function checkAndReplaceTools()
+    if not robot.durability() then
+        -- oc bug, turtle break first piece of wood after three is down.
+        robot.exec('tl,is3,ie,is4')
+        while not robot.suck(sides.forward, 1) do
+            os.sleep(10)
+        end
+        robot.exec('ie,tr')
+        return true
+    end
+    return false
+end
+
 local function mainLoop()
     waitUntilGrow()
 
@@ -32,21 +52,37 @@ local function mainLoop()
     robot.select(SAPLING_SLOT)
     robot.swing(sides.forward)
 
-    -- plantTree
-    robot.exec('mf2,tr,pf,tr,mf,tl,pf,tl,pf,mb,pf')
-
-    -- wood collecting
-    while tractor_beam.suck() or robot.count(robot.inventorySize()) ~= 0 do
-        if (robot.count(robot.inventorySize() - 3) ~= 0) then
-            robot.turn(true)
-            robot.dropSlotRange(sides.forward, 3)
-            robot.select(1)
-            robot.turn(false)
+    if checkAndReplaceTools() then
+        local currentZ = 1
+        robot.move(sides.forward)
+        while currentZ <= MAX_WOOD_HEIGHT do
+            if robot.detect(sides.front) then
+                robot.swing(sides.front)
+                break
+            end
+            if robot.detect(sides.up) then
+                robot.swing(sides.up)
+                break
+            end
+            robot.exec('mu')
+            currentZ = currentZ + 1
         end
+        robot.exec('sf,su,mf,tr,sf,mf,tr')
+        while currentZ ~= 1 do
+            robot.exec('sf,sd,md')
+            currentZ = currentZ - 1
+        end
+        robot.exec('sf,mf,tr,mf,tl,mf,tl2')
     end
 
+    -- plantTree
+    robot.exec('is1,mf2,tr,pf,tr,mf,tl,pf,tl,pf,mb,pf')
+
+    -- wood collecting and
     -- going around to collect a tree that fell in far from the turtle
-    robot.exec('mb2,tl,mf3,tr,mf7,tr,mf7,tr,mf7,tr,mf4,tr,mf2', 'tbs')
+    robot.exec('mb2,tl,mf3,(tr,mf7)3,tr,mf4,tr,mf2', 'tbs')
+
+    cleanInventory()
 end
 
 
