@@ -34,8 +34,8 @@ end
 
 local function checkAndReplaceTools()
     if not robot.durability() then
-        -- oc bug, turtle break first piece of wood after three is down.
-        robot.exec('tl,is3,ie,is4')
+        robot.select(robot.inventorySize())
+        robot.exec('tl')
         while not robot.suck(sides.forward, 1) do
             os.sleep(10)
         end
