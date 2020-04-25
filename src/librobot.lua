@@ -143,7 +143,7 @@ local words = {
     end,
 }
 
---- @param word string
+--- @param word string for example mf4 or mf
 --- @param afterEach string - execute after each command
 --- @param afterEach function - execute after each command
 local function execWord(word, afterEach)
