@@ -8,4 +8,7 @@ component.data = require("data")
 component.modem = require("modem")
 component.robot = require("robot")
 
+-- RailCraft steel tank valve
+component.rcsteeltankvalvetile = require('rcsteeltankvalvetile')
+
 return component
